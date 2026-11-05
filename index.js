@@ -2,6 +2,7 @@ import express from 'express'
 import { MongoClient, ObjectId } from 'mongodb';
 import 'dotenv/config'
 import cors from 'cors'
+import { createRemoteJWKSet, jwtVerify } from 'jose';
 // import { createRemoteJWKSet, jwtVerify } from 'jose';
 const app = express()
 const PORT = 8000;
@@ -30,6 +31,57 @@ const db = mongoClient.db("youthfoundation");
 //Create Mongodb Collection
 const EventsCollection = db.collection("EventsCollection")
 const JoinedEventCollection = db.collection("JoinedEventCollection")
+
+
+
+
+
+/**
+ * verification APi for authentic user
+ */
+
+const verifyToken= async(req,res,next)=>{ 
+  const authHeader = req.headers.authorization
+  if (!authHeader){
+    return res.status(401).send({msg:"unauthorized"});
+  }
+  const token = authHeader.split(" ")[1] 
+  if(!token){
+     return res.status(401).send({msg:"You have No Token to Access"});
+  }
+
+  // verify token 
+  const JWKS =createRemoteJWKSet(new URL(`${process.env.NEXTJS_FRONTEND_URI}/api/auth/jwks`))
+  
+  try{
+    const { payload } = await jwtVerify(token, JWKS)
+    console.log(token)
+    next();
+  } catch(error){
+    console.log(error)
+    return res.status(401).send({msg:"Your Token not match with server"});
+
+  }
+
+    
+
+
+}
+
+
+//Create API to show Event Card According to the user email
+app.get('/events/joined/:email',verifyToken,async(req,res)=>{
+  const {email}= req.params
+  // console.log(email)
+  const result = await JoinedEventCollection.find({userEmail:email}).toArray()
+  res.send(result)
+
+})
+
+
+
+
+
 
 // Create Event and Send Data to Mongodb
 app.post('/events',async(req,res)=>{
@@ -121,15 +173,12 @@ app.put('/events/manage/:id', async(req,res)=>{
 })
 
 // Create Joined Event and Send Data to Mongodb
-app.post('/events/joined',async(req,res)=>{
+app.post('/events/joined',verifyToken,async(req,res)=>{
     const data = req.body
     const result = await JoinedEventCollection.insertOne(data)
     res.send(result)
 })
-//Create API to show Event Card According to the user 
-app.get('/events/joined/:id',async(req,res)=>{
-  
-})
+
 
 app.listen(PORT, () => {
   console.log(`The server is running at port ${PORT}`);
