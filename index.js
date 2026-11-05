@@ -42,6 +42,7 @@ const JoinedEventCollection = db.collection("JoinedEventCollection")
 
 const verifyToken= async(req,res,next)=>{ 
   const authHeader = req.headers.authorization
+  console.log(authHeader)
   if (!authHeader){
     return res.status(401).send({msg:"unauthorized"});
   }
@@ -67,7 +68,6 @@ const verifyToken= async(req,res,next)=>{
 
 
 }
-
 
 //Create API to show Event Card According to the user email
 app.get('/events/joined/:email',verifyToken,async(req,res)=>{
