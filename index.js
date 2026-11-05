@@ -6,7 +6,10 @@ import { createRemoteJWKSet, jwtVerify } from 'jose';
 // import { createRemoteJWKSet, jwtVerify } from 'jose';
 const app = express()
 const PORT = 8000;
-app.use(cors())
+app.use(cors({
+    origin: `${process.env.NEXTJS_FRONTEND_URI}`,
+    credentials: true,
+  }),)
 app.use(express.json())
 
 
