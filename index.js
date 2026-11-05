@@ -29,6 +29,7 @@ const mongoClient = await connectToMongoDB()
 const db = mongoClient.db("youthfoundation");
 //Create Mongodb Collection
 const EventsCollection = db.collection("EventsCollection")
+const JoinedEventCollection = db.collection("JoinedEventCollection")
 
 // Create Event and Send Data to Mongodb
 app.post('/events',async(req,res)=>{
@@ -41,16 +42,6 @@ app.post('/events',async(req,res)=>{
 app.get('/events',async(req,res)=>{
     const result = await EventsCollection.find().toArray()
     res.send(result)
-
-})
-
-// Creating API for sending Dynamic Single Event data to users
-app.get('/events/:id', async(req,res)=>{
-  const {id}= req.params
-  console.log(id)
-  // res.send({id})
-  const result = await EventsCollection.findOne({_id: new ObjectId(id)})
-  res.send(result)
 
 })
 
@@ -76,10 +67,69 @@ app.get("/events/expired", async (req, res) => {
   res.send(result);
 });
 
+// Creating API for sending Dynamic Single Event data to users
+app.get('/events/:id', async(req,res)=>{
+  const {id}= req.params
+  // console.log(id)
+  // res.send({id})
+  const result = await EventsCollection.findOne({_id: new ObjectId(id)})
+  res.send(result)
+})
+
+// Get Events by Email
+app.get('/events/user/:email',async(req,res)=>{
+  const {email}= req.params
+  // console.log(email)
+  const result = await EventsCollection.find({userEmail:email}).toArray()
+  res.send(result)
+
+})
+
+// Delete Event by userEmail 
+app.delete('/events/manage/:id',async(req,res)=>{
+  const{id}=req.params
+  const result = await EventsCollection.deleteOne({_id: new ObjectId(id)})
+  // const result = await EventsCollection.findOne({_id:id})
+  res.send(result)
+  console.log(id)
+
+})
 
 
+// update event here 
+app.put('/events/manage/:id', async(req,res)=>{
+  const {id}= req.params
+  const {_id, ...data}= req.body
 
+  try {
+    const result = await EventsCollection.updateOne(
+      {_id: new ObjectId(id)},
+      {$set: data}
+    )
 
+    if (result.matchedCount === 0) {
+      return res.status(404).send({message: "Destination not found"})
+    }
+
+    res.send(result)
+  } catch (error) {
+    res.status(400).send({
+      message: "Could not update destination",
+      error: String(error)
+    })
+  }
+})
+
+// Create Joined Event and Send Data to Mongodb
+app.post('/events/joined',async(req,res)=>{
+    const data = req.body
+    const result = await JoinedEventCollection.insertOne(data)
+    res.send(result)
+})
+//Create API to show Event Card According to the user 
+app.get('/events/joined/:id',async(req,res)=>{
+  
+})
 
 app.listen(PORT, () => {
   console.log(`The server is running at port ${PORT}`);
