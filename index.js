@@ -55,7 +55,7 @@ const verifyToken= async(req,res,next)=>{
   
   try{
     const { payload } = await jwtVerify(token, JWKS)
-    console.log(token)
+    // console.log(token)
     next();
   } catch(error){
     console.log(error)
@@ -69,14 +69,7 @@ const verifyToken= async(req,res,next)=>{
 }
 
 
-//Create API to show Event Card According to the user email
-app.get('/events/joined/:email',verifyToken,async(req,res)=>{
-  const {email}= req.params
-  // console.log(email)
-  const result = await JoinedEventCollection.find({userEmail:email}).toArray()
-  res.send(result)
 
-})
 
 
 
@@ -84,7 +77,7 @@ app.get('/events/joined/:email',verifyToken,async(req,res)=>{
 
 
 // Create Event and Send Data to Mongodb
-app.post('/events',async(req,res)=>{
+app.post('/events',verifyToken,async(req,res)=>{
     const data = req.body
     const result = await EventsCollection.insertOne(data)
     res.send(result)
@@ -143,7 +136,7 @@ app.delete('/events/manage/:id',async(req,res)=>{
   const result = await EventsCollection.deleteOne({_id: new ObjectId(id)})
   // const result = await EventsCollection.findOne({_id:id})
   res.send(result)
-  console.log(id)
+  // console.log(id)
 
 })
 
@@ -179,7 +172,16 @@ app.post('/events/joined',verifyToken,async(req,res)=>{
     res.send(result)
 })
 
+//Create API to show Event Card According to the user email
+app.get('/events/joined/:email',verifyToken,async(req,res)=>{
+  const {email}= req.params
+  // console.log(email)
+  const result = await JoinedEventCollection.find({userEmail:email}).toArray()
+  res.send(result)
 
+})
 app.listen(PORT, () => {
   console.log(`The server is running at port ${PORT}`);
 });
+
+export default app
