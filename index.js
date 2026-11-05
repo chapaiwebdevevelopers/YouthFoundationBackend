@@ -69,7 +69,14 @@ const verifyToken= async(req,res,next)=>{
 }
 
 
+//Create API to show Event Card According to the user email
+app.get('/events/joined/:email',verifyToken,async(req,res)=>{
+  const {email}= req.params
+  // console.log(email)
+  const result = await JoinedEventCollection.find({userEmail:email}).toArray()
+  res.send(result)
 
+})
 
 
 
@@ -172,14 +179,7 @@ app.post('/events/joined',verifyToken,async(req,res)=>{
     res.send(result)
 })
 
-//Create API to show Event Card According to the user email
-app.get('/events/joined/:email',verifyToken,async(req,res)=>{
-  const {email}= req.params
-  // console.log(email)
-  const result = await JoinedEventCollection.find({userEmail:email}).toArray()
-  res.send(result)
 
-})
 app.listen(PORT, () => {
   console.log(`The server is running at port ${PORT}`);
 });
